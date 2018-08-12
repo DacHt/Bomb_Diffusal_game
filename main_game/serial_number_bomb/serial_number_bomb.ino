@@ -12,6 +12,8 @@ const int kaboomCounterPin = 7;
 const int doubleSpeedCounterPin = 9;
 const int explodeBombCounterPin = 10;
 
+const int pwmPin = 12;
+
 boolean isRedCut = false;
 boolean isGreenCut = false;
 boolean isBrownCut = false;
@@ -22,12 +24,26 @@ boolean startFlag = false;
 
 int wireWrongCount = 0;
 
+//PWM Values:
+//100% = 0
+//50% ~= 3180 range(3150, 3200)
+//25% ~= 4770 range(4750, 4800)
+int pwmValue;
+int pwmState, pwmStateOld;
+
+
+
 String inputString = "";         // a String to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 // Avialable colors: Red, Black, Yellow, Green, White, Brown
 
 void serialEvent() {
+  if(DEBUG) {
+    Serial.println("---------------------");
+    Serial.println("Recivied transmission");
+  }
+  inputString = "";
   while (Serial.available()) {
     // get the new byte:
     char inChar = (char)Serial.read();
@@ -39,11 +55,18 @@ void serialEvent() {
       stringComplete = true;
     }
   }
+  delay(10);
+  if(DEBUG) {
+    Serial.println("Message: " + inputString);
+  }
   if(inputString.startsWith("Reset")) {
     resetFlag = true;
   }
   else if(inputString.startsWith("Start")) {
     startFlag = true;
+  }
+  else {
+    Serial.println("ERROR: Could not read message: " + inputString);
   }
 }
 
@@ -63,14 +86,17 @@ void setup() {
   pinMode(kaboomCounterPin, INPUT);
   pinMode(doubleSpeedCounterPin, OUTPUT);
   pinMode(explodeBombCounterPin, OUTPUT);
-  Serial.write("Serialnumber bomb is active!\n");
 
+  pinMode(pwmPin, INPUT);
+
+  pwmState = 0;
+  pwmStateOld = 0;
   inputString.reserve(200);
   resetFlag = true;
 }
 
 void reset() {
-  Serial.write("Reseting game....\n");
+  Serial.println("Reseting game....");
   //Reset game
   //Send reset signal to counter. A high input will reset the counter to 5 min, when output goes low the counter starts counting.
   digitalWrite(resetCounterPin, HIGH);
@@ -90,6 +116,8 @@ void reset() {
 
   startFlag = false;
   resetFlag = false;
+
+  Serial.println("Ready!"); 
 }
 
 void outputWireStates() {
@@ -159,6 +187,7 @@ boolean isWiresCutCorrect() {
       wireWrongCount++;
     }
   }
+
   
   // All wires has been cut corretly!
   if(isRedCut && wireWrongCount <= 1) {
@@ -178,10 +207,75 @@ boolean isWiresCutCorrect() {
   return false;
 }
 
+void readPwmValue() {
+  pwmValue = pulseIn(pwmPin, HIGH);
+  if(DEBUG) {
+    Serial.println("Reading PWM value: ");
+    Serial.println(pwmValue);
+  }
+
+  pwmStateOld = pwmState;
+
+  //PWM States
+  // 0 = Reset
+  // 1 = Start
+  // 2 = TBD
+  
+  if((pwmValue >= 0) && (pwmValue <= 100)) {
+    if(DEBUG) {
+      Serial.println("PWM: Setting PWM state 0");
+    }
+    pwmState = 0;
+  }
+  else if((pwmValue >= 3100) && (pwmValue <= 3250)) {
+    if(DEBUG) {
+      Serial.println("PWM: Setting PWM state 1");
+    }
+    pwmState = 1;
+  }
+  else if((pwmValue >= 4700) && (pwmValue <= 4850)) {
+    if(DEBUG) {
+      Serial.println("PWM: Setting PWM state 2");
+    }
+    pwmState = 2;
+  }
+
+  if(DEBUG) {
+    Serial.println("pwmState = " + String(pwmState));
+    Serial.println("pwmStateOld = " + String(pwmStateOld));
+  }
+  
+  if((pwmState == 0) && (pwmStateOld != 0)) {  
+    if(DEBUG) {
+      Serial.println("PWM: Setting reset flag");
+    }
+     resetFlag = 1;
+  }
+  else if((pwmState == 1) && (pwmStateOld != 1)) {  
+    if(DEBUG) {
+      Serial.println("PWM: Setting start flag");
+    }
+   startFlag = 1;
+  }
+  else if((pwmState == 2) && (pwmStateOld != 2)) {
+   startFlag = 1;
+  }
+
+
+
+
+  
+
+  
+  
+}
+
 void loop() {
   if(resetFlag) {
-    reset(); 
-    Serial.println("Ready!");  
+    if(DEBUG) {
+      Serial.println("Resetflag is set!");
+    }
+    reset();  
   }
   else if(startFlag) {
     // Start game
@@ -192,18 +286,20 @@ void loop() {
     if((digitalRead(kaboomCounterPin) == HIGH) || (!isWiresCutCorrect() && wireWrongCount > NUMBER_OF_ALLOWED_ERRORS)) {
       digitalWrite(explodeBombCounterPin, HIGH);
       Serial.println("KABOOM!");   
-      delay(10000000);
+      startFlag = false;
     }
     // Check if all wires has been cut correctly
     else if(isWiresCutCorrect()) {
       Serial.println("Defused!");
       digitalWrite(resetCounterPin, HIGH);
-      delay(10000000);
+      startFlag = false;
     }
-  
+    
     if(DEBUG) {
       outputWireStates();
     }
   }
-  delay(1000);   
+
+  readPwmValue();
+  delay(100);   
 }

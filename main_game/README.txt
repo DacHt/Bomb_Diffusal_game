@@ -28,9 +28,9 @@ D5 		-	White wire	                            Wrong wire				Cut at odd 10 sec
 //Counter pins
 D6 		-	ResetCounter	-	Yellow / Green
 D7 		-	KaboomCounter	-	Red / Black
-D8 		-	Even10Counter	-	Green / Black
+D8 		-	Even10Counter	-	Green / Red
 D9 		-	DoubleSpeed		-	Red / Blue
-D10 	-	ExplodeCounter	-	TBD
+D10 	-	ExplodeCounter	-	White / Brown
 
 The counter can be supplied 5V directly from arduino.
 +5V - Brown/Red

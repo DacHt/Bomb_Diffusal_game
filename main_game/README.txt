@@ -43,7 +43,6 @@ If any other wire (Green, Brown, White) is cut it will result in a wrong cut.
 The first wrong cut the counter will go double the speed, but not explode.
 The second wrng cut the bomb will explode.
 
-
 // OddEvenBomb:
 A counter is counting down from 10 minutes. If the counter reaches 0 the bomb has exploded.
 At an even 10 of a second either the RED or the BROWN wire has to be cut. 

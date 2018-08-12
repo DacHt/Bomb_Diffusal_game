@@ -26,11 +26,11 @@ D4 		-	Brown wire								Wrong wire				Cut at even 10 sec
 D5 		-	White wire	                            Wrong wire				Cut at odd 10 sec
                                                     
 //Counter pins
-D6 		-	ResetCounter	-	Yellow / Green
-D7 		-	KaboomCounter	-	Red / Black
-D8 		-	Even10Counter	-	Green / Red
-D9 		-	DoubleSpeed		-	Red / Blue
-D10 	-	ExplodeCounter	-	White / Brown
+D6 		-	ResetCounter	-	Yellow / Green		OUTPUT Set to HIGH for 2 sec when reseting the game 
+D7 		-	KaboomCounter	-	Red / Black			INPUT Set to HIGH by the counter when timer reaches 0
+D8 		-	Even10Counter	-	Green / Red			INPUT Set to HIGH when counter is on even 10 sec, LOW when on odd 10 sec
+D9 		-	DoubleSpeed		-	Red / Blue			OUTPUT Set to HIGH when double speed is activated
+D10 	-	ExplodeCounter	-	White / Brown		OUTPUT Set to HIGH when game logic wants to explode bomb, set to HIGH when counter reach 0
 
 The counter can be supplied 5V directly from arduino.
 +5V - Brown/Red
